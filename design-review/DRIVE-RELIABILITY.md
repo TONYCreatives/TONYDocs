@@ -75,3 +75,83 @@ decision and a backend.
 - [ ] One file's failure no longer aborts the pass; summary reports per-file outcomes.
 - [ ] Token refreshed proactively before expiry and on reconnect/visibility.
 - [ ] (If Tier 3) refresh token issued once; silent refresh works with third-party cookies blocked.
+
+---
+
+# Appendix: Why a pasted OAuth Client ID fails (diagnosis)
+
+Sources: the actual connect path — `design-review/drive.js` (`loadGis` L104, `requestToken`
+L121–158, `connect` L166–183, `setClientId` L42 — trims only, no format validation) and
+`design-review/app.js` (`openDriveOverlay` L4605, `driveConnectFlow` L4615–4645,
+save/Connect handlers L4884–4897) — plus current Google docs (GIS token model, OAuth
+client-side guide, Cloud client management, App Audience; see Sources at the end).
+
+## Connect flow as built
+1. Panel saves pasted ID to `localStorage['tonydocs-drive-clientid']` — **no validation**
+   beyond `.trim()` (the placeholder's `.apps.googleusercontent.com` suffix check cannot
+   catch Android/iOS client IDs, which end the same way).
+2. Connect → `initTokenClient` → `requestAccessToken({prompt:''})` popup → Google checks
+   the **page's JS origin** against the Client ID's Authorized JavaScript origins.
+3. On token: `GET /drive/v3/about` — a second, independent failure point.
+4. `app.js` maps any thrown error to one of ~8 friendly log lines.
+
+## Discriminator: what the log/Google window shows
+
+| What you see | What it means | Fix |
+|---|---|---|
+| `Sign-in timed out.` after ~3 min; Google window shows **Error 400: origin_mismatch / invalid_client** | Origin not registered, wrong project, wrong client type, or un-propagated edit — the popup parks on Google's error page so the callback never fires (`auth-timeout` L133) | See causes 1–4 below |
+| `Google blocked this origin (origin_mismatch).` | App matched origin keywords in a callback error | Add the exact pill text (`app.js` L4607 `window.location.origin`) + `https://perchance.org`, no trailing slash; wait **5 min–few hours** (Google's documented propagation) |
+| `Sign-in was cancelled or denied.` | `access_denied` — consent denied, **or** account not on the Testing test-user list, **or** unverified-app block | Consent screen → Testing → add your account; or publish |
+| `Connect failed (drive-http-403).` | **Auth succeeded**; Drive API not enabled in that project (or scope missing) — distinct signature | APIs & Services → Enable **Google Drive API** in the SAME project |
+| `Popup was blocked.` | Popup blocker | Allow popups |
+| `Could not reach Google sign-in.` (`gis-load`/`gis-timeout`) | accounts.google.com blocked/unreachable | Disable blocker for Google domains |
+| `No Client ID yet.` | Empty input / not saved | Step 2 |
+
+## Ranked root causes for "client ID is failing"
+
+1. **Running the downloaded copy from `file://`** — this conversation started from a
+   downloaded `tonydocs.html`. A `file://` page's origin (`file://` / `null`) **cannot be
+   registered** in Authorized JavaScript origins (Google allows only http(s) domains;
+   `localhost`/`127.0.0.1` by name, ports must match exactly). The app does **no**
+   protocol guard, and the origin pill would display the unusable value. ⇒ OAuth from a
+   local file **always fails**. Serve over `http://localhost:<port>` instead.
+2. **Origin/project mismatch or propagation lag** — origin added to a *different* Cloud
+   project than the one owning the ID (the panel warns about both), or edited <5 min ago.
+   Also: `localhost` ≠ `127.0.0.1` ≠ dev-server port ≠ `perchance.org`; iframe embeds
+   initiate from the **frame's** origin.
+3. **Wrong client type** — Android/iOS client ID pasted (suffix looks identical).
+   Symptom: Error 400 `invalid_client` in the popup.
+4. **Testing/consent block** — external app in Testing needs the authorizing account on
+   the test-user list (its grant then expires every 7 days); unverified apps show
+   "Access blocked". Owner is **not** automatically exempt.
+5. **Drive API disabled** — only after a successful popup; signature is
+   `drive-http-403` on the `/about` call.
+6. **Popup/GIS reachability** — blocker, embed sandboxing, or `prompt:'none'` quiet
+   reconnect with no live Google session (needs third-party cookies; Chrome keeps its
+   user-choice model since Apr 2025 — Incognito blocks them by default).
+
+## Code-level observations (diagnosis, not yet fixed)
+- `setClientId` saves **anything** — a client *secret* or truncated ID passes silently.
+  A cheap fix: reject on save unless `/^\d{6,}-[\w-]+\.apps\.googleusercontent\.com$/`.
+- The friendly-message mapping **swallows Google's actual error text**: the
+  `denied`-keyword branch (`app.js` L4641) matches `auth-denied error=invalid_client…`
+  and shows only "cancelled or denied", hiding the real cause. Append `(details: …)`
+  with the raw message in every branch so support can discriminate.
+- Timeout branch hints at origin_mismatch but not `invalid_client`; mention both.
+- No `file://` guard where the pill is rendered (`app.js` L4607) — show
+  "Local file — serve over localhost to use Drive" when
+  `location.protocol === 'file:'`.
+
+## What could not be verified here
+No live browser/Google account/Cloud console is available in this environment, so this is
+a static diagnosis of the code path + Google's documented behavior, not a reproduction.
+The single fastest confirmation: **the exact text in the Google popup window** (or the
+full `Connect failed (…)` / log line) — it maps 1:1 to the discriminator table above.
+
+Sources: [GIS token model](https://developers.google.com/identity/oauth2/web/guides/use-token-model) ·
+[OAuth client-side guide](https://developers.google.com/identity/protocols/oauth2/javascript-implicit-flow) ·
+[Manage OAuth clients / origin propagation](https://support.google.com/cloud/answer/15549257) ·
+[Manage App Audience / test users / 7-day expiry](https://support.google.com/cloud/answer/15549945) ·
+[Unverified apps](https://support.google.com/cloud/answer/7454865) ·
+[Drive scopes](https://developers.google.com/workspace/drive/api/guides/api-specific-auth) ·
+[Chrome third-party cookie user-choice decision (Apr 2025)](https://privacysandbox.google.com/blog/privacy-sandbox-next-steps)
