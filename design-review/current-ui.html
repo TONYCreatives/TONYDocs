@@ -1,0 +1,890 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+  html { color-scheme: dark; }
+  [hidden] { display: none !important; }
+  :root { --bg: #0f1216; --surface: #161b22; --surface2: #1f2630; --surface3: #2a3340; --border: #2b333f; --text: #e9edf3; --muted: #9aa4b2; --accent: #4f8cff; --accent-hover: #3b74e0; --accent-soft: rgba(79,140,255,0.16); --good: #34b06a; --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --shadow: 0 8px 28px rgba(0,0,0,0.45); }
+  ::selection { background: rgba(79,140,255,0.35); }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: #333c47; border-radius: 8px; border: 2px solid var(--bg); }
+  ::-webkit-scrollbar-track { background: transparent; }
+  body { text-align: left; margin: 0; padding: 0; font-family: "Inter", "Segoe UI", Arial, sans-serif; background: var(--bg); color: var(--text); }
+  button, input, select, textarea { font-family: inherit; }
+  #app { display: flex; flex-direction: column; height: 100vh; }
+  #titleBar { background: #131720; color: #fff; display: flex; align-items: center; gap: 10px; padding: 8px 12px; flex-shrink: 0; border-bottom: 1px solid var(--border); }
+  #logoEl { font-weight: 700; font-size: 18px; letter-spacing: 0.5px; white-space: nowrap; }
+  #logoEl span { font-weight: 400; color: var(--accent); opacity: 1; }
+  #docTitleInput { flex: 2 1 220px; min-width: 80px; max-width: none; padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--r-sm); font-size: 14px; background: var(--surface2); color: var(--text); }
+  #searchInput { flex: 1 1 150px; min-width: 120px; max-width: 320px; width: 100%; box-sizing: border-box; padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--r-sm); font-size: 14px; background: var(--surface2); color: var(--text); }
+  #driveBtn { margin-left: auto; }
+  #titleLabelEl { flex: 2 1 220px; min-width: 80px; padding: 6px 2px; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+  .titleBtn { background: var(--surface2); color: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 6px 10px; cursor: pointer; font-size: 13px; white-space: nowrap; }
+  .titleBtn:hover { background: var(--surface3); }
+  .titleBtn.on { background: var(--good); border-color: transparent; }
+  .toolBtn.danger { color: #ff8a94; }
+  #profileWrap { display: inline-flex; }
+  #profileAvatarBtn { width: 32px; height: 32px; border-radius: 50%; padding: 0; overflow: hidden; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  #profileAvatarBtn:hover { border-color: var(--accent); color: var(--text); }
+  #profileAvatarBtn img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  #profileDrop { position: fixed; top: 50px; right: 12px; width: min(300px, 92vw); background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); box-shadow: var(--shadow); padding: 14px; z-index: 60; }
+  #profileHead { display: flex; gap: 12px; align-items: center; }
+  #profilePhotoEl { width: 48px; height: 48px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); display: inline-flex; align-items: center; justify-content: center; font-size: 22px; }
+  #profilePhotoEl img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  #profilePhotoEl .ic { width: 26px; height: 26px; }
+  #profileIdEl { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  #profileNameEl { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #profileEmailEl { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #profileSessionEl { font-size: 12px; color: var(--muted); margin-top: 10px; }
+  #profileSessionEl.live { color: var(--good); }
+  #profileQuotaWrap { margin-top: 10px; }
+  #profileQuotaBar { height: 6px; border-radius: 4px; background: var(--surface3); overflow: hidden; }
+  #profileQuotaFill { height: 100%; width: 0; background: var(--accent); border-radius: 4px; }
+  #profileQuotaEl { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .profileRow { display: flex; gap: 8px; margin-top: 10px; }
+  .profileRow .toolBtn { flex: 1; }
+  @media (max-width: 820px) { #driveBtn span { display: none; } }
+  #ribbonBar { background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  #ribbonTabs { display: flex; gap: 2px; padding: 6px 10px 0 10px; overflow-x: auto; }
+  .ribbonTab { background: none; border: none; border-bottom: 2px solid transparent; color: var(--muted); font-size: 13px; font-weight: 600; padding: 7px 12px; cursor: pointer; white-space: nowrap; border-radius: 8px 8px 0 0; }
+  .ribbonTab:hover { color: var(--text); background: var(--surface2); }
+  .ribbonTab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .ribbonPanel { display: flex; gap: 4px; padding: 6px 10px; flex-wrap: wrap; align-items: stretch; border-top: 1px solid var(--border); }
+  #zoomLevelBtn { min-width: 54px; font-variant-numeric: tabular-nums; }
+  body.focus-mode #sideBar { display: none; }
+  #sideBar { position: relative; }
+  #sideCollapseBtn { position: absolute; top: 50%; right: -13px; transform: translateY(-50%); width: 26px; height: 56px; padding: 0; border-radius: 0 8px 8px 0; background: var(--surface2); border: 1px solid var(--border); border-left: none; color: var(--muted); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 5; }
+  #sideCollapseBtn:hover { color: var(--text); background: var(--surface3); }
+  #sideExpandTab { position: fixed; left: 0; top: 50%; transform: translateY(-50%); width: 26px; height: 56px; padding: 0; border-radius: 0 8px 8px 0; background: var(--surface2); border: 1px solid var(--border); border-left: none; color: var(--muted); display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 35; box-shadow: var(--shadow); }
+  #sideExpandTab:hover { color: var(--text); background: var(--surface3); }
+  body.focus-mode #sideExpandTab { display: flex; }
+  @media (max-width: 820px) { #sideCollapseBtn { display: none; } body.focus-mode #sideExpandTab { display: none; } }
+  #findBar { display: flex; gap: 6px; align-items: center; padding: 6px 12px; background: var(--surface); border-bottom: 1px solid var(--border); font-size: 13px; flex-wrap: wrap; flex-shrink: 0; }
+  #findInput, #replaceInput { padding: 6px 10px; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface2); color: var(--text); width: 150px; }
+  #findCountEl { color: var(--muted); font-size: 12px; min-width: 70px; font-variant-numeric: tabular-nums; }
+  .ribbonGroup { display: flex; flex-direction: column; border-right: 1px solid var(--border); padding: 0 10px; min-width: 0; }
+  .ribbonGroup:last-child { border-right: none; }
+  .ribbonButtons { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+  .ribbonLabel { font-size: 11px; color: var(--muted); text-align: center; margin-top: 4px; }
+  .ribbonBtn { border: 1px solid transparent; background: transparent; color: var(--text); border-radius: var(--r-sm); padding: 5px 7px; cursor: pointer; font-size: 14px; min-width: 30px; }
+  .ribbonBtn:hover { background: var(--surface3); border-color: var(--border); }
+  .ribbonBtn.active { background: var(--accent-soft); border-color: var(--accent); }
+  .ribbonBtn:disabled { opacity: 0.4; cursor: default; }
+  .ribbonSelect { font-size: 13px; padding: 4px; border: 1px solid var(--border); border-radius: var(--r-sm); max-width: 130px; background: var(--surface2); color: var(--text); }
+  .ribbonColor { width: 30px; height: 26px; padding: 0; border: 1px solid var(--border); border-radius: var(--r-sm); cursor: pointer; background: var(--surface2); }
+  #mainLayout { display: flex; flex: 1; min-height: 0; }
+  #sideBar { width: 264px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; min-height: 0; }
+  #newMenuCtn { padding: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+  #newDocBtn { flex: 1 1 100%; background: var(--accent); color: #fff; border: none; border-radius: 10px; padding: 9px 6px; cursor: pointer; font-size: 14px; font-weight: 600; }
+  #newDocBtn:hover { background: var(--accent-hover); }
+  #newFolderBtn, #newSheetSideBtn, #newSlideSideBtn, #newPdfSideBtn { flex: 1; color: var(--text); background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 9px 10px; cursor: pointer; font-size: 14px; }
+  #newFolderBtn:hover, #newSheetSideBtn:hover, #newSlideSideBtn:hover, #newPdfSideBtn:hover { background: var(--surface3); }
+  #treeCtn { flex: 1; overflow-y: auto; padding: 4px 6px 12px 6px; font-size: 14px; }
+  .treeItem { padding: 5px 8px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 6px; user-select: none; }
+  .treeItem:hover { background: var(--surface2); }
+  .treeItem.selected { background: var(--accent-soft); }
+  .treeKids { margin-left: 14px; border-left: 1px solid var(--border); padding-left: 4px; }
+  #sideFootEl { padding: 10px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--border); }
+  #mainArea { flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 0; }
+  #filesView { flex: 1; overflow-y: auto; padding: 16px 20px; }
+  #crumbEl { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+  #crumbEl button { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 13px; padding: 2px 4px; }
+  #filesToolbarEl { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+  #filesToolbarEl h2 { margin: 0; font-size: 20px; flex: 1; }
+  .toolBtn { background: var(--surface2); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 7px 10px; cursor: pointer; font-size: 13px; }
+  .toolBtn:hover { background: var(--surface3); }
+  .toolBtn.primary { background: var(--accent); color: #fff; border-color: transparent; }
+  .toolBtn.primary:hover { background: var(--accent-hover); }
+  .ic { width: 16px; height: 16px; flex: none; }
+  .ribbonBtn .ic, .toolBtn .ic, .titleBtn .ic { width: 15px; height: 15px; }
+  .ribbonBtn, .toolBtn, .titleBtn, #newDocBtn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+  .treeItem span:first-child { display: inline-flex; }
+  .treeItem .ic { width: 15px; height: 15px; }
+  .fileCard .ico { display: flex; }
+  .fileCard .ico .ic { width: 32px; height: 32px; }
+  #fileGridCtn { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+  .fileCard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 12px 10px; cursor: pointer; position: relative; }
+  .fileCard:hover { border-color: var(--accent); box-shadow: var(--shadow); }
+  .fileCard .ico { font-size: 30px; }
+  .fileCard .nm { font-size: 14px; font-weight: 600; margin-top: 6px; padding-right: 24px; word-break: break-word; }
+  .fileCard .mt { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .kebabBtn { position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: 1px solid transparent; border-radius: var(--r-sm); color: var(--muted); cursor: pointer; }
+  .kebabBtn:hover { background: var(--surface2); color: var(--text); border-color: var(--border); }
+  .cardMenu { position: absolute; top: 36px; right: 6px; z-index: 5; min-width: 132px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-md); box-shadow: var(--shadow); padding: 4px; display: none; }
+  .cardMenu.open { display: block; }
+  .cardMenu button { display: block; width: 100%; box-sizing: border-box; background: none; border: none; color: var(--text); font-size: 13px; text-align: left; padding: 8px 10px; border-radius: var(--r-sm); cursor: pointer; }
+  .cardMenu button:hover { background: var(--surface3); }
+  .cardMenu button.danger { color: #ff8a94; }
+  #editorView { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  #editorTopBar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 6px 12px; display: flex; gap: 8px; align-items: center; font-size: 13px; border-radius: 0; }
+  @media (max-width: 820px) {
+    #editorTopBar { flex-wrap: wrap; row-gap: 6px; }
+    #editorMetaEl { flex: 1 1 100%; order: 99; color: var(--muted); }
+  }
+  #canvasCtn { flex: 1; overflow-y: auto; background: var(--bg); padding: 24px 12px 60px 12px; position: relative; min-width: 0; }
+  #editMainWrap { flex: 1; display: flex; min-height: 0; min-width: 0; }
+  #commentsPane { width: 280px; flex-shrink: 0; background: var(--surface); border-left: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; }
+  #outlinePane { width: 250px; flex-shrink: 0; background: var(--surface); border-left: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; }
+  #outlineHead { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
+  #outlineList { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 2px; }
+  #outlineList:empty:before { content: "No headings yet. Apply Heading 1 or 2 to see an outline."; color: var(--muted); font-size: 13px; padding: 4px; }
+  .outlineItem { background: none; border: none; border-radius: var(--r-sm); color: var(--text); font-size: 13px; text-align: left; padding: 6px 8px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .outlineItem:hover { background: var(--surface2); }
+  .outlineItem.lv2 { padding-left: 20px; color: var(--muted); }
+  .outlineItem.lv3 { padding-left: 32px; color: var(--muted); font-size: 12px; }
+  #templateOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 65; padding: 16px; }
+  #templateBox { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 20px; width: min(640px, 96vw); max-height: 88vh; overflow-y: auto; box-shadow: var(--shadow); }
+  #templateBox h3 { margin: 0 0 4px 0; font-size: 18px; }
+  #templateBox p { font-size: 13px; color: var(--muted); margin: 6px 0 12px 0; }
+  #templateGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+  .templateCard { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-md); padding: 12px; cursor: pointer; text-align: left; color: var(--text); }
+  .templateCard:hover { border-color: var(--accent); }
+  .templateCard .tt { font-weight: 700; font-size: 14px; }
+  .templateCard .td { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .ai-status { font-size: 12px; color: var(--muted); align-self: center; padding: 0 8px; min-width: 90px; }
+  .ai-status.busy { color: var(--accent); animation: ai-pulse 1s infinite; }
+  @keyframes ai-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+  #commentsHead { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
+  #commentsList { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  #commentsList:empty:before { content: "No comments. Select text and press Comment to start one."; color: var(--muted); font-size: 13px; }
+  .commentItem { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-md); padding: 8px 10px; font-size: 13px; cursor: pointer; }
+  .commentItem:hover { border-color: var(--accent); }
+  .commentItem.flash { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+  .commentItem .cq { font-style: italic; color: var(--muted); font-size: 12px; border-left: 2px solid var(--accent); padding-left: 6px; margin-bottom: 4px; word-break: break-word; }
+  .commentItem .ct { word-break: break-word; }
+  .commentItem .cm { font-size: 11px; color: var(--muted); margin-top: 4px; display: flex; gap: 6px; align-items: center; }
+  .commentItem .cm button { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 11px; padding: 0; }
+  .commentItem .cm button.danger { color: #ff8a94; }
+  #pageEl [data-cid] { background: #fff1cc; border-bottom: 2px solid #e6a800; }
+  #pageEl [data-cid].flash { outline: 2px solid var(--accent); }
+  #pageEl [data-spell] { text-decoration: underline wavy #e81123; text-decoration-skip-ink: none; }
+  #pageEl ins[data-tc] { color: #0b6a0b; text-decoration: underline; text-decoration-color: #0b6a0b; }
+  #pageEl del[data-tc] { color: #c00000; }
+  #rulerEl { background: var(--surface); border-bottom: 1px solid var(--border); padding: 8px 12px 10px 12px; flex-shrink: 0; overflow: hidden; }
+  #rulerInner { position: relative; height: 26px; margin: 0 auto; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .ruler-tick { position: absolute; top: 0; bottom: 0; width: 1px; background: #3a4350; }
+  .ruler-tick.major { background: #8b95a3; }
+  .ruler-lab { position: absolute; top: 2px; font-size: 9px; color: var(--muted); transform: translateX(3px); }
+  .ruler-margin { position: absolute; top: 0; bottom: 0; background: var(--accent-soft); }
+  .ruler-handle { position: absolute; top: 0; bottom: 0; width: 10px; background: var(--accent); opacity: 0.85; border-radius: 3px; cursor: ew-resize; }
+  #guidesLayer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .page-guide { position: absolute; left: 0; right: 0; display: flex; align-items: center; gap: 8px; }
+  .page-guide .gl { flex: 1; border-top: 1px dashed #5b6572; }
+  .page-guide .gt { font-size: 11px; color: #5b6572; background: var(--bg); padding: 0 6px; border-radius: 4px; white-space: nowrap; }
+  #pageEl { background: #fff; width: min(800px, 96%); margin: 0 auto; min-height: 900px; padding: 64px 60px; border-radius: var(--r-md); box-shadow: var(--shadow); outline: none; font-family: Calibri, Arial, sans-serif; font-size: 15px; line-height: 1.55; color: #201f1e; }
+  #pageEl:empty:before { content: "Start typing your document..."; color: #a19f9d; }
+  #pageEl h1 { font-size: 28px; margin: 18px 0 10px 0; color: #2b579a; }
+  #pageEl h2 { font-size: 22px; margin: 16px 0 8px 0; color: #2b579a; }
+  #pageEl h3 { font-size: 17px; margin: 14px 0 6px 0; }
+  #pageEl table { border-collapse: collapse; margin: 10px 0; }
+  #pageEl table td { border: 1px solid #8a8886; padding: 6px 10px; min-width: 60px; }
+  #pageEl img { max-width: 100%; }
+  #pageEl img.sel-img { outline: 2px solid var(--accent); outline-offset: 2px; }
+  #pageEl .td-break { border-top: 2px dashed #4f8cff; margin: 14px 0; padding: 2px 0; font-size: 11px; color: #4f8cff; page-break-after: always; }
+  #pageEl [data-td="header"] { border-bottom: 1px solid #a19f9d; color: #605e5c; font-size: 12px; padding-bottom: 4px; margin-bottom: 12px; }
+  #pageEl [data-td="footer"] { border-top: 1px solid #a19f9d; color: #605e5c; font-size: 12px; padding-top: 4px; margin-top: 12px; }
+  #pageEl [data-td="toc"] { background: #f3f6fb; border: 1px solid #c7d7f0; border-radius: 8px; padding: 10px 14px; margin: 10px 0; font-size: 14px; }
+  #pageEl [data-td="toc"] ul { margin: 6px 0; padding-left: 22px; }
+  #pageEl [data-fn] { font-size: 12px; color: #323130; border-top: 1px solid #c8c6c4; margin-top: 8px; padding-top: 4px; }
+  .td-pop { position: fixed; z-index: 80; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-md); box-shadow: var(--shadow); padding: 10px; display: none; }
+  .td-pop.open { display: block; }
+  #tablePickerGrid { display: grid; grid-template-columns: repeat(8, 22px); gap: 3px; }
+  .tp-cell { width: 22px; height: 22px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); padding: 0; cursor: pointer; }
+  .tp-cell.lit { background: var(--accent-soft); border-color: var(--accent); }
+  #tablePickerLabel { font-size: 12px; color: var(--muted); margin-top: 6px; min-height: 16px; }
+  #symbolPopGrid { display: grid; grid-template-columns: repeat(8, 30px); gap: 2px; max-width: 260px; }
+  .sym-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 15px; padding: 4px 0; cursor: pointer; }
+  .sym-btn:hover { background: var(--surface3); border-color: var(--accent); }
+  #imgHandle { position: fixed; z-index: 81; width: 14px; height: 14px; background: var(--accent); border: 2px solid #fff; border-radius: 4px; cursor: nwse-resize; display: none; box-shadow: var(--shadow); }
+  #sheetView { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  #sheetTopBar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 6px 12px; display: flex; gap: 8px; align-items: center; font-size: 13px; flex-wrap: wrap; }
+  #formulaBar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 6px 12px; display: flex; gap: 8px; align-items: center; }
+  #nameBoxEl { min-width: 56px; text-align: center; font-weight: 600; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 5px 8px; font-size: 13px; }
+  #sheetFormulaInput { flex: 1; min-width: 120px; padding: 7px 10px; font-size: 14px; border: 1px solid var(--border); border-radius: var(--r-sm); font-family: Consolas, monospace; background: var(--surface2); color: var(--text); }
+  #sheetToolsEl { display: flex; gap: 2px; align-items: center; }
+  #sheetScrollCtn { flex: 1; overflow: auto; background: var(--surface); }
+  #sheetTable { border-collapse: collapse; font-size: 13px; }
+  #sheetTable th { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); padding: 4px 8px; font-weight: 600; min-width: 34px; position: sticky; z-index: 2; }
+  #sheetTable thead th { top: 0; }
+  #sheetTable tbody th { left: 0; z-index: 1; }
+  #sheetTable td { border: 1px solid var(--border); padding: 0; min-width: 90px; background: var(--surface); color: var(--text); }
+  .sheetCell { padding: 4px 8px; min-height: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: cell; max-width: 220px; }
+  .sheetCell.active { outline: 2px solid var(--accent); outline-offset: -2px; background: var(--accent-soft); }
+  .sheetCell.inRange { background: var(--accent-soft); }
+  .sheetCell.err { color: #ff8a94; }
+  .sheetCell.num { text-align: right; }
+  .sheetEditInput { width: 100%; box-sizing: border-box; border: 2px solid var(--accent); border-radius: 6px; background: var(--surface2); color: var(--text); padding: 2px 6px; font-size: 13px; font-family: Consolas, monospace; }
+  #slideView { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  #slideTopBar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 6px 12px; display: flex; gap: 8px; align-items: center; font-size: 13px; flex-wrap: wrap; }
+  #slideMain { flex: 1; display: flex; min-height: 0; }
+  #slideStrip { width: 158px; background: var(--surface); border-right: 1px solid var(--border); overflow-y: auto; padding: 8px; flex-shrink: 0; }
+  .slideThumb { border: 2px solid var(--border); border-radius: var(--r-md); padding: 8px; margin-bottom: 8px; cursor: pointer; background: var(--surface2); color: var(--text); }
+  .slideThumb:hover { border-color: var(--muted); }
+  .slideThumb.sel { border-color: var(--accent); }
+  .slideThumb .tn { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+  .slideThumb .tt { font-weight: 700; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .slideThumb .tl { font-size: 11px; color: var(--muted); }
+  #slideCanvasWrap { flex: 1; overflow: auto; background: var(--bg); padding: 20px; display: flex; align-items: flex-start; justify-content: center; min-width: 0; }
+  #slideCanvas { width: min(880px, 100%); aspect-ratio: 16 / 9; border-radius: var(--r-md); box-shadow: var(--shadow); padding: 34px 44px; box-sizing: border-box; overflow: hidden; }
+  .sl-light { background: #fff; color: #201f1e; }
+  .sl-dark { background: #1b1a19; color: #f3f2f1; }
+  .sl-blue { background: #2b579a; color: #fff; }
+  .sl-warm { background: #fff8f0; color: #323130; }
+  .slTitle { font-size: 34px; font-weight: 700; margin: 0 0 8px 0; line-height: 1.2; }
+  .slSub { font-size: 19px; opacity: 0.85; margin: 0; }
+  .slHead { font-size: 27px; font-weight: 700; margin: 0 0 12px 0; line-height: 1.25; }
+  .slBody { font-size: 17px; line-height: 1.5; margin: 0; }
+  .slBody ul { margin: 6px 0; padding-left: 24px; }
+  .slCols { display: flex; gap: 20px; }
+  .slCol { flex: 1; min-width: 0; font-size: 16px; line-height: 1.5; }
+  .slCenter { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; }
+  #slideCanvas [contenteditable]:focus { outline: 2px dashed var(--accent); outline-offset: 4px; }
+  [data-ph]:empty:before { content: attr(data-ph); opacity: 0.5; }
+  #presentOverlay { position: fixed; inset: 0; background: #000; z-index: 60; display: flex; flex-direction: column; }
+  #presentSlideCtn { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px; min-height: 0; }
+  .pSlide { width: min(1100px, 94vw); aspect-ratio: 16 / 9; border-radius: 8px; padding: 44px 56px; box-sizing: border-box; overflow: hidden; }
+  .pSlide .slTitle { font-size: 46px; }
+  .pSlide .slHead { font-size: 36px; }
+  .pSlide .slBody, .pSlide .slCol { font-size: 21px; }
+  .pSlide .slSub { font-size: 24px; }
+  #presentBar { display: flex; gap: 10px; align-items: center; justify-content: center; padding: 10px; }
+  #presentCountEl { color: #fff; font-size: 14px; min-width: 70px; text-align: center; }
+  #pdfView { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  #pdfTopBar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 6px 12px; display: flex; gap: 8px; align-items: center; font-size: 13px; flex-wrap: wrap; }
+  #pdfWrap { flex: 1; overflow: auto; background: var(--bg); padding: 14px; display: flex; min-height: 0; }
+  #pdfFrame { flex: 1; border: none; border-radius: var(--r-md); background: #fff; min-height: 300px; }
+  #pdfFallback { margin: auto; color: #fff; text-align: center; font-size: 14px; max-width: 420px; }
+  #printArea { display: none; }
+  #driveOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 65; padding: 16px; }
+  #driveBox { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 20px; width: min(560px, 96vw); max-height: 88vh; overflow-y: auto; box-shadow: var(--shadow); }
+  #driveBox h3 { margin: 0 0 4px 0; font-size: 18px; }
+  #driveBox h4 { margin: 16px 0 6px 0; font-size: 14px; color: var(--accent); }
+  #driveBox p { font-size: 13px; color: var(--muted); margin: 6px 0; }
+  .driveRow { display: flex; gap: 8px; align-items: center; margin: 8px 0; flex-wrap: wrap; }
+  #driveClientInput { flex: 1; min-width: 200px; padding: 7px 10px; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-sm); font-family: Consolas, monospace; background: var(--surface2); color: var(--text); }
+  .originPill { font-family: Consolas, monospace; font-size: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 4px 8px; word-break: break-all; }
+  #driveAccountEl { font-size: 13px; font-weight: 600; }
+  #driveLogEl { background: #0b0e12; color: #c9d1d9; border: 1px solid var(--border); border-radius: var(--r-md); padding: 10px; font-family: Consolas, monospace; font-size: 12px; max-height: 150px; overflow-y: auto; white-space: pre-wrap; }
+  #driveLogEl:empty:before { content: "Sync log will appear here."; opacity: 0.6; }
+  .driveCheck { font-size: 13px; display: flex; gap: 6px; align-items: center; }
+  #statusBar { background: #131720; color: var(--text); border-top: 1px solid var(--border); font-size: 12px; padding: 5px 12px; display: flex; gap: 14px; align-items: center; flex-shrink: 0; }
+  #statusBar .spacer { flex: 1; }
+  .statusBtn { background: var(--surface2); color: var(--text); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 3px 8px; cursor: pointer; font-size: 12px; }
+  .statusBtn:hover { background: var(--surface3); }
+  #modalOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 70; padding: 16px; }
+  #modalBox { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 20px; width: min(460px, 96vw); box-shadow: var(--shadow); }
+  #modalTitleEl { font-size: 17px; font-weight: 700; margin: 0 0 10px 0; }
+  #modalMsgEl { font-size: 14px; color: var(--muted); white-space: pre-wrap; }
+  #modalInput { width: 100%; box-sizing: border-box; margin-top: 10px; padding: 8px 10px; font-size: 14px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface2); color: var(--text); }
+  #modalRow { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+  #emptyEl { text-align: center; color: var(--muted); padding: 40px 10px; font-size: 14px; }
+  #mobileBarBtn { display: none; }
+  @media (max-width: 820px) {
+    #commentsPane, #outlinePane { position: fixed; right: 0; top: 46px; bottom: 0; z-index: 40; box-shadow: -2px 0 10px rgba(0,0,0,0.35); }
+    #sideBar { position: fixed; z-index: 40; height: calc(100vh - 46px); top: 46px; left: 0; transform: translateX(-105%); transition: transform 0.2s; box-shadow: 2px 0 10px rgba(0,0,0,0.2); }
+    #sideBar.open { transform: none; }
+    body.focus-mode #sideBar.open { display: flex; }
+    #mobileBarBtn { display: inline-block; }
+    #searchInput { display: none; }
+    #pageEl { padding: 28px 18px; min-height: 600px; }
+    #sheetTable td { min-width: 70px; }
+    #formulaBar { flex-wrap: wrap; }
+    #slideStrip { width: 104px; }
+    #slideCanvas { padding: 18px 20px; }
+    .slTitle { font-size: 24px; }
+    .slHead { font-size: 20px; }
+  }
+  @media print {
+    #app, #driveOverlay, #presentOverlay, #modalOverlay { display: none; }
+    #printArea { display: block; color: #000; }
+    .printDoc { font-family: Calibri, Arial, sans-serif; font-size: 14px; line-height: 1.5; }
+    .printDoc h1 { font-size: 24px; margin: 0 0 12px 0; }
+    .printSheet table { border-collapse: collapse; width: 100%; font-size: 11px; }
+    .printSheet th, .printSheet td { border: 1px solid #666; padding: 3px 6px; text-align: left; }
+    .printSlide { border: 1px solid #999; border-radius: 4px; padding: 22px 26px; margin: 0 0 14px 0; page-break-inside: avoid; overflow: hidden; }
+    .printSlide .slTitle { font-size: 26px; }
+    .printSlide .slHead { font-size: 20px; }
+    .printSlide .slBody, .printSlide .slCol, .printSlide .slSub { font-size: 13px; }
+  }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-menu" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11"/></g></symbol>
+<symbol id="i-clear" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.5H4.4L1.5 8l2.9 5.5H10a1 1 0 0 0 1-1v-10a1 1 0 0 0-1-1z"/><path d="M6.6 6.2l3.6 3.6M10.2 6.2 6.6 9.8"/></g></symbol>
+<symbol id="i-align-left" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 4h11M2.5 8h7M2.5 12h11"/></g></symbol>
+<symbol id="i-align-center" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4.5 4h7M2.5 8h11M4.5 12h7"/></g></symbol>
+<symbol id="i-align-right" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 4h11M6.5 8h7M2.5 12h11"/></g></symbol>
+<symbol id="i-justify" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 4h11M2.5 8h11M2.5 12h11"/></g></symbol>
+<symbol id="i-bullets" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="3.2" cy="4.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="3.2" cy="8" r="1.1" fill="currentColor" stroke="none"/><circle cx="3.2" cy="11.5" r="1.1" fill="currentColor" stroke="none"/><path d="M6.3 4.5H13M6.3 8H13M6.3 11.5H13"/></g></symbol>
+<symbol id="i-numbers" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><text x="1.2" y="6" font-size="4.4" fill="currentColor" stroke="none">1</text><text x="1.2" y="9.7" font-size="4.4" fill="currentColor" stroke="none">2</text><text x="1.2" y="13.4" font-size="4.4" fill="currentColor" stroke="none">3</text><path d="M6.2 4.7h6.8M6.2 8.3h6.8M6.2 11.9h6.8"/></g></symbol>
+<symbol id="i-indent" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5.8 3.5h7.7M5.8 6.5h7.7M5.8 9.5h7.7M5.8 12.5h7.7"/><path d="M1.5 8h3.6M3.2 6.1 5.1 8l-1.9 1.9"/></g></symbol>
+<symbol id="i-outdent" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5.8 3.5h7.7M5.8 6.5h7.7M5.8 9.5h7.7M5.8 12.5h7.7"/><path d="M5.1 8H1.5M3.4 6.1 1.5 8l1.9 1.9"/></g></symbol>
+<symbol id="i-undo" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 3.5 3 7l3.5 3.5"/><path d="M3.4 7H11a2.6 2.6 0 0 1 0 5.2H7.5"/></g></symbol>
+<symbol id="i-redo" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 3.5 13 7l-3.5 3.5"/><path d="M12.6 7H5a2.6 2.6 0 0 0 0 5.2h3.5"/></g></symbol>
+<symbol id="i-table" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="3" width="12" height="10" rx="1"/><path d="M2 6.4h12M2 9.7h12M7.2 3v10"/></g></symbol>
+<symbol id="i-image" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="12" height="10" rx="1"/><circle cx="5.7" cy="6.5" r="1.2"/><path d="M2.6 11.4 7 7.4l2.4 2.4 2-2 2 2"/></g></symbol>
+<symbol id="i-link" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6.8 9.2a2.8 2.8 0 0 0 4 0l1.9-1.9a2.8 2.8 0 0 0-4-4l-1 1"/><path d="M9.2 6.8a2.8 2.8 0 0 0-4 0l-1.9 1.9a2.8 2.8 0 0 0 4 4l1-1"/></g></symbol>
+<symbol id="i-hr" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 8h12"/></g></symbol>
+<symbol id="i-doc" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 1.8h5l3 3v9.4H4z"/><path d="M9 1.8v3h3"/><path d="M6 8h4M6 10.2h4M6 12.4h2.5"/></g></symbol>
+<symbol id="i-sheet" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2.2" y="2.8" width="11.6" height="10.4" rx="1"/><path d="M2.2 6.3h11.6M2.2 9.7h11.6M6.9 2.8v10.4"/></g></symbol>
+<symbol id="i-slide" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="1.6" y="2.6" width="12.8" height="8.2" rx="1"/><path d="M4.5 6.3h7M4.5 8.3h4.5"/><path d="M6.5 13.4h3M8 10.8v2.6"/></g></symbol>
+<symbol id="i-pdf" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 1.8h5l3 3v9.4H4z"/><path d="M9 1.8v3h3"/><path d="M6 8.5h4M6 10.7h4"/></g></symbol>
+<symbol id="i-folder" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1.8 4.4c0-.8.6-1.4 1.4-1.4h2.9l1.3 1.6h5.4c.8 0 1.4.6 1.4 1.4v4.6c0 .8-.6 1.4-1.4 1.4H3.2c-.8 0-1.4-.6-1.4-1.4z"/></g></symbol>
+<symbol id="i-files" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="5" y="5" width="8.5" height="8.5" rx="1"/><path d="M10.8 5V3.6a1 1 0 0 0-1-1H3.6a1 1 0 0 0-1 1V10a1 1 0 0 0 1 1H5"/></g></symbol>
+<symbol id="i-plus" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></g></symbol>
+<symbol id="i-chev-l" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3.5 5.5 8l4.5 4.5"/></g></symbol>
+<symbol id="i-chev-r" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5 10.5 8 6 12.5"/></g></symbol>
+<symbol id="i-chev-u" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 10 8 5.5 12.5 10"/></g></symbol>
+<symbol id="i-chev-d" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 6 8 10.5 12.5 6"/></g></symbol>
+<symbol id="i-cloud" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 12.5a2.6 2.6 0 0 1-.5-5.1 3.5 3.5 0 0 1 6.8-.8 2.7 2.7 0 0 1-.2 5.9z"/></g></symbol>
+<symbol id="i-check" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 6.5 12 13 4.5"/></g></symbol>
+<symbol id="i-dots" viewBox="0 0 16 16"><g fill="currentColor"><circle cx="8" cy="3.2" r="1.3"/><circle cx="8" cy="8" r="1.3"/><circle cx="8" cy="12.8" r="1.3"/></g></symbol>
+<symbol id="i-painter" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.6 2.2a1.3 1.3 0 0 1 1.9 0l1.3 1.3a1.3 1.3 0 0 1 0 1.9L6.4 12.8l-2.7.7.7-2.7z"/></g></symbol>
+<symbol id="i-find" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="7" cy="7" r="4.2"/><path d="M10.3 10.3 14.2 14.2"/></g></symbol>
+<symbol id="i-user" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="5.4" r="2.6"/><path d="M2.8 13.6c.7-2.6 2.8-4 5.2-4s4.5 1.4 5.2 4"/></g></symbol>
+</defs></svg>
+<div id="app">
+  <header id="titleBar">
+    <button class="titleBtn" id="mobileBarBtn" title="Menu" aria-label="Menu"><svg class="ic" aria-hidden="true"><use href="#i-menu"/></svg></button>
+    <div id="logoEl">TONY<span>Docs</span></div>
+    <input id="docTitleInput" value="My Files" aria-label="Document title">
+    <span id="titleLabelEl" hidden></span>
+    <input id="searchInput" placeholder="Search files..." aria-label="Search files">
+    <button class="titleBtn" id="driveBtn"><svg class="ic" aria-hidden="true"><use href="#i-cloud"/></svg><span>Connect Drive</span></button>
+    <span id="profileWrap">
+      <button id="profileAvatarBtn" title="Profile" aria-label="Profile" aria-haspopup="true"><svg class="ic" aria-hidden="true"><use href="#i-user"/></svg></button>
+      <div id="profileDrop" hidden>
+        <div id="profileHead">
+          <span id="profilePhotoEl"><svg class="ic" aria-hidden="true"><use href="#i-user"/></svg></span>
+          <div id="profileIdEl"><b id="profileNameEl">Not connected</b><span id="profileEmailEl">Link Drive to sign in</span></div>
+        </div>
+        <div id="profileSessionEl" hidden></div>
+        <div id="profileQuotaWrap" hidden>
+          <div id="profileQuotaBar"><div id="profileQuotaFill"></div></div>
+          <div id="profileQuotaEl"></div>
+        </div>
+        <div class="profileRow"><button class="toolBtn primary" id="profileSyncBtn">Sync now</button></div>
+        <div class="profileRow"><button class="toolBtn" id="profileManageBtn">Manage Drive sync</button><button class="toolBtn danger" id="profileLogoutBtn">Log out</button></div>
+      </div>
+    </span>
+  </header>
+
+  <nav id="ribbonBar" hidden>
+    <div id="ribbonTabs" role="tablist" aria-label="Ribbon tabs">
+      <button class="ribbonTab active" data-rtab="home" role="tab">Home</button>
+      <button class="ribbonTab" data-rtab="insert" role="tab">Insert</button>
+      <button class="ribbonTab" data-rtab="layout" role="tab">Layout</button>
+      <button class="ribbonTab" data-rtab="review" role="tab">Review</button>
+      <button class="ribbonTab" data-rtab="ai" role="tab">AI</button>
+      <button class="ribbonTab" data-rtab="view" role="tab">View</button>
+    </div>
+    <div class="ribbonPanel" data-rpanel="home">
+    <div class="ribbonGroup">
+      <div class="ribbonButtons">
+        <select class="ribbonSelect" id="fontNameSelect" title="Font">
+          <option value="Inter">Inter</option>
+          <option value="Calibri">Calibri</option>
+          <option value="Arial">Arial</option>
+          <option value="Georgia">Georgia</option>
+          <option value="Times New Roman">Times New Roman</option>
+          <option value="Verdana">Verdana</option>
+          <option value="Courier New">Courier New</option>
+          <option value="Segoe UI">Segoe UI</option>
+        </select>
+        <select class="ribbonSelect" id="fontSizeSelect" title="Size">
+          <option value="10">10</option>
+          <option value="12">12</option>
+          <option value="14" selected>14</option>
+          <option value="16">16</option>
+          <option value="18">18</option>
+          <option value="24">24</option>
+          <option value="32">32</option>
+        </select>
+        <select class="ribbonSelect" id="blockSelect" title="Style">
+          <option value="p">Normal</option>
+          <option value="h1">Heading 1</option>
+          <option value="h2">Heading 2</option>
+          <option value="h3">Heading 3</option>
+        </select>
+      </div>
+      <div class="ribbonLabel">Styles</div>
+    </div>
+    <div class="ribbonGroup">
+      <div class="ribbonButtons">
+        <button class="ribbonBtn" data-qstyle="normal" title="Normal">A</button>
+        <button class="ribbonBtn" data-qstyle="h1" title="Heading 1"><b>H1</b></button>
+        <button class="ribbonBtn" data-qstyle="h2" title="Heading 2"><b>H2</b></button>
+        <button class="ribbonBtn" data-qstyle="quote" title="Quote"><i>❝Q</i></button>
+        <button class="ribbonBtn" data-qstyle="code" title="Code"><span style="font-family:Consolas,monospace">&lt;/&gt;</span></button>
+      </div>
+      <div class="ribbonLabel">Quick styles</div>
+    </div>
+    <div class="ribbonGroup">
+      <div class="ribbonButtons">
+        <button class="ribbonBtn" data-cmd="bold" title="Bold (Ctrl+B)"><b>B</b></button>
+        <button class="ribbonBtn" data-cmd="italic" title="Italic (Ctrl+I)"><i>I</i></button>
+        <button class="ribbonBtn" data-cmd="underline" title="Underline (Ctrl+U)"><u>U</u></button>
+        <button class="ribbonBtn" data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
+        <button class="ribbonBtn" data-cmd="superscript" title="Superscript">A<sup>2</sup></button>
+        <button class="ribbonBtn" data-cmd="subscript" title="Subscript">A<sub>2</sub></button>
+        <button class="ribbonBtn" id="caseBtn" title="Change case (Title / UPPER / lower)">Aa</button>
+        <button class="ribbonBtn" id="painterBtn" title="Format painter: pick up formatting, then select text to apply"><svg class="ic" aria-hidden="true"><use href="#i-painter"/></svg></button>
+        <input type="color" class="ribbonColor" id="foreColorInput" value="#201f1e" title="Text color">
+        <input type="color" class="ribbonColor" id="hiliteColorInput" value="#fff100" title="Highlight">
+        <button class="ribbonBtn" data-cmd="removeFormat" title="Clear formatting"><svg class="ic" aria-hidden="true"><use href="#i-clear"/></svg></button>
+      </div>
+      <div class="ribbonLabel">Font</div>
+    </div>
+    <div class="ribbonGroup">
+      <div class="ribbonButtons">
+        <button class="ribbonBtn" data-cmd="justifyLeft" title="Align left"><svg class="ic" aria-hidden="true"><use href="#i-align-left"/></svg></button>
+        <button class="ribbonBtn" data-cmd="justifyCenter" title="Center"><svg class="ic" aria-hidden="true"><use href="#i-align-center"/></svg></button>
+        <button class="ribbonBtn" data-cmd="justifyRight" title="Align right"><svg class="ic" aria-hidden="true"><use href="#i-align-right"/></svg></button>
+        <button class="ribbonBtn" data-cmd="justifyFull" title="Justify"><svg class="ic" aria-hidden="true"><use href="#i-justify"/></svg></button>
+        <button class="ribbonBtn" data-cmd="insertUnorderedList" title="Bullets"><svg class="ic" aria-hidden="true"><use href="#i-bullets"/></svg></button>
+        <button class="ribbonBtn" data-cmd="insertOrderedList" title="Numbers"><svg class="ic" aria-hidden="true"><use href="#i-numbers"/></svg></button>
+        <button class="ribbonBtn" data-cmd="indent" title="Indent"><svg class="ic" aria-hidden="true"><use href="#i-indent"/></svg></button>
+        <button class="ribbonBtn" data-cmd="outdent" title="Outdent"><svg class="ic" aria-hidden="true"><use href="#i-outdent"/></svg></button>
+      </div>
+      <div class="ribbonLabel">Paragraph</div>
+    </div>
+    <div class="ribbonGroup">
+      <div class="ribbonButtons">
+        <select class="ribbonSelect" id="lineSpacingSelect" title="Line spacing">
+          <option value="1">Single</option>
+          <option value="1.15" selected>1.15</option>
+          <option value="1.5">1.5</option>
+          <option value="2">Double</option>
+        </select>
+        <select class="ribbonSelect" id="paraSpacingSelect" title="Paragraph spacing">
+          <option value="0">Tight</option>
+          <option value="8" selected>Normal gap</option>
+          <option value="16">Wide gap</option>
+        </select>
+      </div>
+      <div class="ribbonLabel">Spacing</div>
+    </div>
+    <div class="ribbonGroup">
+      <div class="ribbonButtons">
+        <button class="ribbonBtn" data-cmd="undo" title="Undo (Ctrl+Z)"><svg class="ic" aria-hidden="true"><use href="#i-undo"/></svg></button>
+        <button class="ribbonBtn" data-cmd="redo" title="Redo (Ctrl+Y)"><svg class="ic" aria-hidden="true"><use href="#i-redo"/></svg></button>
+      </div>
+      <div class="ribbonLabel">History</div>
+    </div>
+    <div class="ribbonGroup">
+      <div class="ribbonButtons">
+        <button class="ribbonBtn" id="findBtn" title="Find &amp; replace (Ctrl+F)"><svg class="ic" aria-hidden="true"><use href="#i-find"/></svg></button>
+      </div>
+      <div class="ribbonLabel">Editing</div>
+    </div>
+    </div>
+    <div class="ribbonPanel" data-rpanel="insert" hidden>
+    <div class="ribbonGroup">
+      <div class="ribbonButtons">
+        <button class="ribbonBtn" id="tableBtn" title="Insert table (pick size)"><svg class="ic" aria-hidden="true"><use href="#i-table"/></svg></button>
+        <button class="ribbonBtn" id="imageBtn" title="Insert image from file"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg></button>
+        <button class="ribbonBtn" id="imageUrlBtn" title="Insert image from URL">URL</button>
+        <button class="ribbonBtn" id="imgLeftBtn" title="Selected image align left"><svg class="ic" aria-hidden="true"><use href="#i-align-left"/></svg></button>
+        <button class="ribbonBtn" id="imgCenterBtn" title="Selected image center"><svg class="ic" aria-hidden="true"><use href="#i-align-center"/></svg></button>
+        <button class="ribbonBtn" id="imgRightBtn" title="Selected image align right"><svg class="ic" aria-hidden="true"><use href="#i-align-right"/></svg></button>
+        <select class="ribbonSelect" id="imgSizeSelect" title="Selected image size">
+          <option value="">Img size</option>
+          <option value="200">Small</option>
+          <option value="400">Medium</option>
+          <option value="600">Large</option>
+          <option value="full">Full width</option>
+        </select>
+      </div>
+      <div class="ribbonLabel">Tables &amp; images</div>
+    </div>
+    <div class="ribbonGroup">
+      <div class="ribbonButtons">
+        <button class="ribbonBtn" id="rowAboveBtn" title="Insert row above">R+</button>
+        <button class="ribbonBtn" id="rowBelowBtn" title="Insert row below">R-</button>
+        <button class="ribbonBtn" id="delRowBtn" title="Delete row">R✕</button>
+        <button class="ribbonBtn" id="colLeftBtn" title="Insert column left">C+</button>
+        <button class="ribbonBtn" id="colRightBtn" title="Insert column right">C+2</button>
+        <button class="ribbonBtn" id="delColBtn" title="Delete column">C✕</button>
+        <button class="ribbonBtn" id="mergeBtn" title="Merge selected cells">Merge</button>
+        <button class="ribbonBtn" id="splitBtn" title="Split cell">Split</button>
+        <select class="ribbonSelect" id="borderSelect" title="Table borders">
+          <option value="">Borders</option>
+          <option value="all">All borders</option>
+          <option value="outer">Outer only</option>
+          <option value="none">No borders</option>
+        </select>
+        <input type="color" class="ribbonColor" id="shadeColorInput" value="#fff1cc" title="Cell shading">
+      </div>
+      <div class="ribbonLabel">Table tools</div>
+    </div>
+    <div class="ribbonGroup">
+      <div class="ribbonButtons">
+        <button class="ribbonBtn" id="linkBtn" title="Insert link"><svg class="ic" aria-hidden="true"><use href="#i-link"/></svg></button>
+        <button class="ribbonBtn" data-cmd="insertHorizontalRule" title="Horizontal line"><svg class="ic" aria-hidden="true"><use href="#i-hr"/></svg></button>
+        <button class="ribbonBtn" id="breakBtn" title="Insert page break">Break</button>
+        <button class="ribbonBtn" id="headerBtn" title="Add header">Hdr</button>
+        <button class="ribbonBtn" id="footerBtn" title="Add footer">Ftr</button>
+        <button class="ribbonBtn" id="pageNumBtn" title="Insert page number">#</button>
+      </div>
+      <div class="ribbonLabel">Pages</div>
+    </div>
+    <div class="ribbonGroup">
+      <div class="ribbonButtons">
+        <button class="ribbonBtn" id="symbolBtn" title="Insert symbol">Ω</button>
+        <button class="ribbonBtn" id="dateBtn" title="Insert date and time">Date</button>
+        <button class="ribbonBtn" id="tocBtn" title="Insert table of contents">TOC</button>
+        <button class="ribbonBtn" id="tocRefreshBtn" title="Refresh table of contents">↻</button>
+        <button class="ribbonBtn" id="footnoteBtn" title="Insert footnote">Fn</button>
+      </div>
+      <div class="ribbonLabel">Content</div>
+    </div>
+    </div>
+    <div class="ribbonPanel" data-rpanel="layout" hidden>
+    <div class="ribbonGroup">
+      <div class="ribbonButtons">
+        <select class="ribbonSelect" id="paperSizeSelect" title="Paper size">
+          <option value="letter">Letter</option>
+          <option value="a4">A4</option>
+          <option value="legal">Legal</option>
+          <option value="a5">A5</option>
+        </select>
+        <button class="ribbonBtn" id="orientPortraitBtn" title="Portrait orientation">⇕</button>
+        <button class="ribbonBtn" id="orientLandscapeBtn" title="Landscape orientation">⇔</button>
+      </div>
+      <div class="ribbonLabel">Paper</div>
+    </div>
+    <div class="ribbonGroup">
+      <div class="ribbonButtons">
+        <button class="ribbonBtn" id="marginNarrowBtn" title="Narrow margins (0.5 in)">Narrow</button>
+        <button class="ribbonBtn" id="marginNormalBtn" title="Normal margins (1 in)">Normal</button>
+        <button class="ribbonBtn" id="marginWideBtn" title="Wide margins (1.5 in)">Wide</button>
+      </div>
+      <div class="ribbonLabel">Margins</div>
+    </div>
+    <div class="ribbonGroup">
+      <div class="ribbonButtons">
+        <button class="ribbonBtn" id="col1Btn" title="One column">1</button>
+        <button class="ribbonBtn" id="col2Btn" title="Two columns">2</button>
+        <button class="ribbonBtn" id="col3Btn" title="Three columns">3</button>
+      </div>
+      <div class="ribbonLabel">Columns</div>
+    </div>
+    <div class="ribbonGroup">
+      <div class="ribbonButtons">
+        <button class="ribbonBtn" id="rulerBtn" title="Show or hide the ruler">Ruler</button>
+        <button class="ribbonBtn" id="guidesBtn" title="Show or hide page guides">Guides</button>
+      </div>
+      <div class="ribbonLabel">Show</div>
+    </div>
+    </div>
+    <div class="ribbonPanel" data-rpanel="review" hidden>
+    <div class="ribbonGroup">
+      <div class="ribbonButtons">
+        <button class="ribbonBtn" id="commentAddBtn" title="Comment on selected text">Comment</button>
+        <button class="ribbonBtn" id="commentsToggleBtn" title="Show or hide comments pane">Pane</button>
+      </div>
+      <div class="ribbonLabel">Comments</div>
+    </div>
+    <div class="ribbonGroup">
+      <div class="ribbonButtons">
+        <button class="ribbonBtn" id="trackBtn" title="Track further typing and deletions">Track</button>
+        <button class="ribbonBtn" id="acceptBtn" title="Accept all tracked changes">Accept</button>
+        <button class="ribbonBtn" id="rejectBtn" title="Reject all tracked changes">Reject</button>
+      </div>
+      <div class="ribbonLabel">Tracking</div>
+    </div>
+    <div class="ribbonGroup">
+      <div class="ribbonButtons">
+        <button class="ribbonBtn" id="wordCountBtn" title="Word count">123 words</button>
+        <button class="ribbonBtn" id="spellBtn" title="Check spelling">Spelling</button>
+        <button class="ribbonBtn" id="addWordBtn" title="Add word at caret to dictionary">+Word</button>
+        <button class="ribbonBtn" id="dictBtn" title="Personal dictionary">Dict</button>
+      </div>
+      <div class="ribbonLabel">Proofing</div>
+    </div>
+    </div>
+    <div class="ribbonPanel" data-rpanel="ai" hidden>
+    <div class="ribbonGroup">
+      <div class="ribbonButtons">
+        <button class="ribbonBtn" id="aiContinueBtn" title="Keep writing from the caret">Continue</button>
+        <button class="ribbonBtn" id="aiCustomBtn" title="Write with your own instruction">Custom…</button>
+        <button class="ribbonBtn" id="aiStopBtn" title="Stop generating" disabled>Stop</button>
+        <span class="ai-status" id="aiStatusEl"></span>
+      </div>
+      <div class="ribbonLabel">Write</div>
+    </div>
+    <div class="ribbonGroup">
+      <div class="ribbonButtons">
+        <button class="ribbonBtn" id="aiRewriteBtn" title="Rewrite the selected text">Rewrite</button>
+        <button class="ribbonBtn" id="aiShortenBtn" title="Shorten the selected text">Shorten</button>
+        <button class="ribbonBtn" id="aiExpandBtn" title="Expand the selected text">Expand</button>
+      </div>
+      <div class="ribbonLabel">Refine selection</div>
+    </div>
+    </div>
+    <div class="ribbonPanel" data-rpanel="view" hidden>
+    <div class="ribbonGroup">
+      <div class="ribbonButtons">
+        <button class="ribbonBtn" id="zoomOutBtn" title="Zoom out">−</button>
+        <button class="ribbonBtn" id="zoomLevelBtn" title="Reset zoom">100%</button>
+        <button class="ribbonBtn" id="zoomInBtn" title="Zoom in">+</button>
+        <button class="ribbonBtn" id="zoomFitBtn" title="Fit to screen">Fit</button>
+      </div>
+      <div class="ribbonLabel">Zoom</div>
+    </div>
+    <div class="ribbonGroup">
+      <div class="ribbonButtons">
+        <button class="ribbonBtn" id="focusBtn" title="Hide sidebar for focused writing">Focus</button>
+        <button class="ribbonBtn" id="outlineBtn" title="Show or hide the outline pane">Outline</button>
+      </div>
+      <div class="ribbonLabel">Show</div>
+    </div>
+    </div>
+  </nav>
+
+  <div id="findBar" hidden>
+    <svg class="ic" aria-hidden="true"><use href="#i-find"/></svg>
+    <input id="findInput" placeholder="Find" aria-label="Find">
+    <span id="findCountEl"></span>
+    <button class="ribbonBtn" id="findPrevBtn" title="Previous match" aria-label="Previous match"><svg class="ic" aria-hidden="true"><use href="#i-chev-u"/></svg></button>
+    <button class="ribbonBtn" id="findNextBtn" title="Next match" aria-label="Next match"><svg class="ic" aria-hidden="true"><use href="#i-chev-d"/></svg></button>
+    <input id="replaceInput" placeholder="Replace with" aria-label="Replace with">
+    <button class="toolBtn" id="findReplaceBtn">Replace</button>
+    <button class="toolBtn" id="findAllBtn">All</button>
+    <button class="ribbonBtn" id="findCloseBtn" title="Close (Esc)" aria-label="Close">✕</button>
+  </div>
+
+  <div id="mainLayout">
+    <aside id="sideBar">
+      <div id="newMenuCtn">
+        <button id="newDocBtn"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg> New doc</button>
+        <button id="newSheetSideBtn" title="New spreadsheet" aria-label="New spreadsheet"><svg class="ic" aria-hidden="true"><use href="#i-sheet"/></svg></button>
+        <button id="newSlideSideBtn" title="New slideshow" aria-label="New slideshow"><svg class="ic" aria-hidden="true"><use href="#i-slide"/></svg></button>
+        <button id="newPdfSideBtn" title="Import PDF" aria-label="Import PDF"><svg class="ic" aria-hidden="true"><use href="#i-pdf"/></svg></button>
+        <button id="newFolderBtn" title="New folder" aria-label="New folder"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg></button>
+      </div>
+      <div id="treeCtn"></div>
+      <div id="sideFootEl">Local-first. Free forever. Open source MIT.<br>Docs, Sheets, Slides, PDF and Drive sync live.</div>
+      <button id="sideCollapseBtn" title="Collapse sidebar" aria-label="Collapse sidebar"><svg class="ic" aria-hidden="true"><use href="#i-chev-l"/></svg></button>
+    </aside>
+    <button id="sideExpandTab" title="Show sidebar" aria-label="Show sidebar"><svg class="ic" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+    <main id="mainArea">
+      <section id="filesView">
+        <div id="crumbEl"></div>
+        <div id="filesToolbarEl">
+          <h2 id="filesTitleEl">My Files</h2>
+          <button class="toolBtn primary" id="newDocBtn2"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg> New document</button>
+          <button class="toolBtn" id="templatesBtn" title="Start from a template">Templates</button>
+          <button class="toolBtn" id="newSheetBtn" title="New spreadsheet"><svg class="ic" aria-hidden="true"><use href="#i-sheet"/></svg> Sheet</button>
+          <button class="toolBtn" id="newSlideBtn" title="New slideshow"><svg class="ic" aria-hidden="true"><use href="#i-slide"/></svg> Slide</button>
+          <button class="toolBtn" id="newFolderBtn2"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg> New folder</button>
+          <button class="toolBtn" id="newPdfBtn" title="Import PDF"><svg class="ic" aria-hidden="true"><use href="#i-pdf"/></svg> PDF</button>
+          <button class="toolBtn" id="importDocxBtn" title="Import Word (.docx)">DOCX</button>
+        </div>
+        <div id="fileGridCtn"></div>
+        <div id="emptyEl" hidden>No files here yet. Create your first document.</div>
+      </section>
+      <section id="editorView" hidden>
+        <div id="editorTopBar">
+          <button class="toolBtn" id="backBtn"><svg class="ic" aria-hidden="true"><use href="#i-chev-l"/></svg> Files</button>
+          <span id="editorMetaEl">Editing</span>
+          <span style="flex:1"></span>
+          <button class="toolBtn" id="exportHtmlBtn">Export HTML</button>
+          <button class="toolBtn" id="exportDocxBtn" title="Export Word (.docx)">Export DOCX</button>
+          <button class="toolBtn" id="exportTxtBtn">Export TXT</button>
+          <button class="toolBtn" id="printBtn">Print / PDF</button>
+        </div>
+        <div id="rulerEl" hidden>
+          <div id="rulerInner">
+            <div class="ruler-margin" id="rulerMarginL"></div>
+            <div class="ruler-margin" id="rulerMarginR"></div>
+            <div id="rulerTicks"></div>
+            <div class="ruler-handle" id="rulerHandleL" title="Drag to set left margin"></div>
+            <div class="ruler-handle" id="rulerHandleR" title="Drag to set right margin"></div>
+          </div>
+        </div>
+        <div id="editMainWrap">
+          <div id="canvasCtn">
+            <div id="guidesLayer"></div>
+            <div id="pageEl" contenteditable="true"></div>
+          </div>
+          <aside id="commentsPane" hidden>
+            <div id="commentsHead"><b>Comments</b><button class="ribbonBtn" id="commentsCloseBtn" title="Close (Esc)" aria-label="Close">✕</button></div>
+            <div id="commentsList"></div>
+          </aside>
+          <aside id="outlinePane" hidden>
+            <div id="outlineHead"><b>Outline</b><button class="ribbonBtn" id="outlineCloseBtn" title="Close (Esc)" aria-label="Close">✕</button></div>
+            <div id="outlineList"></div>
+          </aside>
+        </div>
+        <input type="file" id="imageFileInput" accept="image/*" hidden>
+        <input type="file" id="docxFileInput" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
+      </section>
+      <section id="sheetView" hidden>
+        <div id="sheetTopBar">
+          <button class="toolBtn" id="backSheetBtn"><svg class="ic" aria-hidden="true"><use href="#i-chev-l"/></svg> Files</button>
+          <span id="sheetMetaEl">Sheet</span>
+          <span style="flex:1"></span>
+          <button class="toolBtn" id="addRowBtn">+ Rows</button>
+          <button class="toolBtn" id="addColBtn">+ Columns</button>
+          <button class="toolBtn" id="importCsvBtn">Import CSV</button>
+          <button class="toolBtn" id="exportCsvBtn">Export CSV</button>
+          <button class="toolBtn" id="exportXlsxBtn">Export XLSX</button>
+          <button class="toolBtn" id="printSheetBtn">Print / PDF</button>
+        </div>
+        <div id="formulaBar">
+          <span id="nameBoxEl">A1</span>
+          <input id="sheetFormulaInput" placeholder="Type value or formula starting with =" aria-label="Formula">
+          <div id="sheetToolsEl">
+            <button class="ribbonBtn" id="sheetBoldBtn" title="Bold"><b>B</b></button>
+            <button class="ribbonBtn" id="sheetItalicBtn" title="Italic"><i>I</i></button>
+            <button class="ribbonBtn" id="sheetLeftBtn" title="Align left"><svg class="ic" aria-hidden="true"><use href="#i-align-left"/></svg></button>
+            <button class="ribbonBtn" id="sheetCenterBtn" title="Center"><svg class="ic" aria-hidden="true"><use href="#i-align-center"/></svg></button>
+            <button class="ribbonBtn" id="sheetRightBtn" title="Align right"><svg class="ic" aria-hidden="true"><use href="#i-align-right"/></svg></button>
+            <button class="ribbonBtn" id="sheetClearBtn" title="Clear cell"><svg class="ic" aria-hidden="true"><use href="#i-clear"/></svg></button>
+          </div>
+        </div>
+        <div id="sheetScrollCtn"><table id="sheetTable"></table></div>
+        <input type="file" id="sheetCsvInput" accept=".csv,text/csv" hidden>
+      </section>
+      <section id="slideView" hidden>
+        <div id="slideTopBar">
+          <button class="toolBtn" id="backSlideBtn"><svg class="ic" aria-hidden="true"><use href="#i-chev-l"/></svg> Files</button>
+          <span id="slideMetaEl">Slides</span>
+          <span style="flex:1"></span>
+          <button class="toolBtn primary" id="addSlideBtn">+ Slide</button>
+          <button class="toolBtn" id="dupSlideBtn">Duplicate</button>
+          <button class="toolBtn" id="delSlideBtn">Delete</button>
+          <button class="toolBtn" id="upSlideBtn" title="Move up" aria-label="Move up"><svg class="ic" aria-hidden="true"><use href="#i-chev-u"/></svg></button>
+          <button class="toolBtn" id="downSlideBtn" title="Move down" aria-label="Move down"><svg class="ic" aria-hidden="true"><use href="#i-chev-d"/></svg></button>
+          <select class="ribbonSelect" id="slideLayoutSelect" title="Layout">
+            <option value="title">Title slide</option>
+            <option value="bullets">Title and bullets</option>
+            <option value="two">Two columns</option>
+            <option value="section">Section header</option>
+            <option value="blank">Blank</option>
+          </select>
+          <select class="ribbonSelect" id="slideThemeSelect" title="Theme">
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+            <option value="blue">Blue</option>
+            <option value="warm">Warm</option>
+          </select>
+          <button class="toolBtn" id="slideBulletsBtn" title="Toggle bullets"><svg class="ic" aria-hidden="true"><use href="#i-bullets"/></svg></button>
+          <button class="toolBtn" id="presentBtn">Present</button>
+          <button class="toolBtn" id="exportPptxBtn">Export PPTX</button>
+          <button class="toolBtn" id="printSlidesBtn">Print / PDF</button>
+        </div>
+        <div id="slideMain">
+          <div id="slideStrip"></div>
+          <div id="slideCanvasWrap"><div id="slideCanvas"></div></div>
+        </div>
+      </section>
+      <section id="pdfView" hidden>
+        <div id="pdfTopBar">
+          <button class="toolBtn" id="backPdfBtn"><svg class="ic" aria-hidden="true"><use href="#i-chev-l"/></svg> Files</button>
+          <span id="pdfMetaEl">PDF</span>
+          <span style="flex:1"></span>
+          <button class="toolBtn" id="openPdfTabBtn">Open in new tab</button>
+          <button class="toolBtn" id="downloadPdfBtn">Download</button>
+        </div>
+        <div id="pdfWrap">
+          <iframe id="pdfFrame" title="PDF viewer"></iframe>
+          <div id="pdfFallback" hidden><p id="pdfFallbackMsgEl"></p></div>
+        </div>
+        <input type="file" id="pdfFileInput" accept="application/pdf,.pdf" hidden>
+      </section>
+    </main>
+  </div>
+
+  <footer id="statusBar">
+    <span id="wordCountEl">0 words</span>
+    <span id="saveStateEl">Saved</span>
+    <span class="spacer"></span>
+    <button class="statusBtn" id="aboutBtn">About</button>
+  </footer>
+</div>
+
+<div id="templateOverlay" hidden>
+  <div id="templateBox">
+    <h3>Start from a template</h3>
+    <p>Pick a starting point. Your content stays editable — headings, tables and lists included.</p>
+    <div id="templateGrid"></div>
+    <div class="driveRow" style="justify-content:flex-end">
+      <button class="toolBtn" id="templateCloseBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<div id="printArea" hidden></div>
+
+<div class="td-pop" id="tablePickerPop" role="dialog" aria-label="Pick table size">
+  <div id="tablePickerGrid"></div>
+  <div id="tablePickerLabel">Pick table size</div>
+</div>
+<div class="td-pop" id="symbolPop" role="dialog" aria-label="Pick a symbol">
+  <div id="symbolPopGrid"></div>
+</div>
+<div id="imgHandle" title="Drag to resize image"></div>
+
+<div id="driveOverlay" hidden>
+  <div id="driveBox">
+    <h3>Google Drive sync</h3>
+    <p>Link your Drive with a Google popup. Files sync into a TONYDocs folder in your Drive as real <b>.docx / .xlsx / .pptx</b> files (plus your PDFs), so Drive previews them as actual documents. Each file carries the full TONYDocs data inside, so syncing restores it here exactly — edit in TONYDocs, view anywhere. The login stays on this device and reconnects automatically.</p>
+    <h4>1 • Account</h4>
+    <div id="driveAccountEl">Not connected</div>
+    <div class="driveRow">
+      <button class="toolBtn primary" id="driveConnectBtn">Connect Drive</button>
+      <button class="toolBtn" id="driveDisconnectBtn">Disconnect</button>
+    </div>
+    <h4>2 • Client ID from Google Cloud</h4>
+    <p>Paste your OAuth Client ID here. It is stored only in this browser.</p>
+    <div class="driveRow">
+      <input id="driveClientInput" placeholder="Paste Client ID ending in .apps.googleusercontent.com" aria-label="Client ID">
+      <button class="toolBtn" id="driveClientSaveBtn">Save</button>
+    </div>
+    <h4>3 • Origins to allow in Google Cloud</h4>
+    <p>Add both of these under Credentials, OAuth client, Authorized JavaScript origins. Type them exactly, no trailing slash. After saving, wait about 5 minutes before pressing Connect again. Make sure you are editing the same Cloud project that owns the Client ID above.</p>
+    <div class="driveRow"><span class="originPill" id="driveOriginNowEl"></span><button class="toolBtn" id="driveCopyNowBtn">Copy</button></div>
+    <div class="driveRow"><span class="originPill">https://perchance.org</span></div>
+    <h4>4 • Sync</h4>
+    <p>Sync is live: edits push seconds after you stop typing, other devices pull in about every 90 seconds while the tab is open, and every revisit re-syncs automatically. Google sessions last about an hour — the app refreshes yours silently while it's open. If one lapses (e.g. overnight), press Sync now: one click reconnects and syncs. Silent reconnect needs Google third-party cookies allowed.</p>
+    <div class="driveRow">
+      <button class="toolBtn primary" id="driveSyncBtn">Sync now</button>
+      <label class="driveCheck"><input type="checkbox" id="driveAutoChk"> Auto-sync after changes</label>
+    </div>
+    <p id="driveLastEl">Never synced</p>
+    <div id="driveLogEl"></div>
+    <div class="driveRow" style="justify-content:flex-end">
+      <button class="toolBtn" id="driveCloseBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<div id="presentOverlay" hidden>
+  <div id="presentSlideCtn"></div>
+  <div id="presentBar">
+    <button class="titleBtn" id="presentPrevBtn" aria-label="Previous slide"><svg class="ic" aria-hidden="true"><use href="#i-chev-l"/></svg></button>
+    <span id="presentCountEl">1 / 1</span>
+    <button class="titleBtn" id="presentNextBtn" aria-label="Next slide"><svg class="ic" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+    <button class="titleBtn" id="presentFullBtn">Fullscreen</button>
+    <button class="titleBtn" id="presentExitBtn">Exit</button>
+  </div>
+</div>
+
+<div id="modalOverlay" hidden>
+  <div id="modalBox">
+    <h3 id="modalTitleEl">Title</h3>
+    <div id="modalMsgEl"></div>
+    <input id="modalInput" hidden>
+    <div id="modalRow">
+      <button class="toolBtn" id="modalCancelBtn">Cancel</button>
+      <button class="toolBtn primary" id="modalOkBtn">OK</button>
+    </div>
+  </div>
+</div>
+
+<script src="src/drive.js"></script>
+<script src="src/dict.js"></script>
+<script src="src/dict-core.js"></script>
+<script src="src/app.js"></script>
